@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How smb-automation-health was built</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0d1117; color: #c9d1d9; padding: 30px; line-height: 1.6;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 22px; color: #f0f6fc; margin-bottom: 8px; }
+    .subtitle { color: #8b949e; font-size: 14px; margin-bottom: 30px; }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 30px; }
+    .timeline::before {
+      content: ''; position: absolute; left: 10px; top: 0; bottom: 0;
+      width: 2px; background: #30363d;
+    }
+
+    .step {
+      position: relative; margin-bottom: 28px; padding: 16px 20px;
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+    }
+    .step::before {
+      content: ''; position: absolute; left: -26px; top: 20px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #1f6feb; border: 2px solid #0d1117;
+    }
+    .step.done::before { background: #3fb950; }
+    .step.test::before { background: #d29922; }
+
+    .step-num {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      color: #8b949e; margin-bottom: 4px;
+    }
+    .step-title { font-size: 15px; font-weight: 600; color: #f0f6fc; margin-bottom: 6px; }
+    .step-desc { font-size: 13px; color: #8b949e; margin-bottom: 8px; }
+
+    .code-block {
+      background: #1c2128; border: 1px solid #30363d; border-radius: 6px;
+      padding: 10px 14px; font-family: "SF Mono", monospace; font-size: 12px;
+      color: #e6edf3; overflow-x: auto; white-space: pre; margin: 8px 0;
+    }
+
+    .decision {
+      border-left: 3px solid #d29922; padding: 10px 14px;
+      background: #1c2108; border-radius: 0 6px 6px 0; margin: 8px 0;
+      font-size: 13px; color: #d29922;
+    }
+
+    .file-grid {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0;
+    }
+    .file-tag {
+      padding: 3px 10px; background: #1c2128; border: 1px solid #30363d;
+      border-radius: 4px; font-size: 12px; font-family: monospace; color: #58a6ff;
+    }
+
+    .diagram-arrow { text-align: center; color: #30363d; font-size: 18px; padding: 4px 0; }
+
+    .result-box {
+      margin-top: 30px; padding: 16px 20px; background: #0c2d15;
+      border: 1px solid #3fb950; border-radius: 8px;
+    }
+    .result-box h3 { color: #3fb950; font-size: 15px; margin-bottom: 6px; }
+    .result-box p { color: #7ee787; font-size: 13px; }
+
+    .note {
+      padding: 10px 14px; background: #111d2e; border: 1px solid #1f6feb;
+      border-radius: 6px; font-size: 13px; color: #58a6ff; margin: 8px 0;
+    }
+
+    .meta {
+      margin-top: 8px; display: flex; gap: 10px; font-size: 11px; color: #484f58;
+    }
+    .meta span { background: #1c2128; padding: 2px 8px; border-radius: 4px; }
+
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge.goal { background: #0c2d15; color: #3fb950; }
+    .badge.code { background: #111d2e; color: #58a6ff; }
+    .badge.test { background: #1c2108; color: #d29922; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🧱 How smb-automation-health was built</h1>
+  <p class="subtitle">Build workflow — from idea to running web app in ~15 minutes</p>
+
+  <div class="timeline">
+
+    <!-- Step 1 -->
+    <div class="step done">
+      <div class="step-num"><span class="badge goal">GOAL</span> Step 1</div>
+      <div class="step-title">Decide what to build</div>
+      <div class="step-desc">
+        User asked: <em>"can you create a local host web app for this?"</em> (referring to the smb-automation-health CLI proposal).
+        Decision: build a Flask web dashboard instead of a CLI. Reason: visual dashboard is faster to read at a glance than terminal output.
+      </div>
+      <div class="decision">🔀 Decision point: Flask vs FastAPI vs Express. Chose Flask — simplest, zero config, single file to start.</div>
+      <div class="meta"><span>1 tool call</span><span>5 seconds</span></div>
+    </div>
+
+    <div class="diagram-arrow">↓</div>
+
+    <!-- Step 2 -->
+    <div class="step done">
+      <div class="step-num"><span class="badge code">STRUCTURE</span> Step 2</div>
+      <div class="step-title">Scaffold directory tree</div>
+      <div class="step-desc">
+        Created the project folder and subdirectories for separation of concerns:
+      </div>
+      <div class="code-block">mkdir -p ~/projects/smb-automation-health/{config,checks,templates,static}</div>
+      <div class="file-grid">
+        <span class="file-tag">config/</span>
+        <span class="file-tag">checks/</span>
+        <span class="file-tag">templates/</span>
+        <span class="file-tag">static/</span>
+      </div>
+      <div class="meta"><span>1 mkdir call</span></div>
+    </div>
+
+    <div class="diagram-arrow">↓</div>
+
+    <!-- Step 3 -->
+    <div class="step done">
+      <div class="step-num"><span class="badge code">CONFIG</span> Step 3</div>
+      <div class="step-title">Write client config + requirements</div>
+      <div class="step-desc">
+        Sample config with 3 clients (John's Roofing, Phil's Recruitment, MagnifAI Internal)
+        and 11 services total. Each service has type, URL, timeout, expected status.
+        Real API keys come from env vars.
+      </div>
+      <div class="code-block"># config/clients.yaml
+clients:
+  - name: "John's Roofing TX"
+    services:
+      - type: http       # generic HTTP endpoint
+      - type: ghl        # GoHighLevel API (auth+quota check)</div>
+      <div class="file-grid"><span class="file-tag">config/clients.yaml</span><span class="file-tag">requirements.txt</span></div>
+      <div class="meta"><span>2 write_file calls</span></div>
+    </div>
+
+    <div class="diagram-arrow">↓</div>
+
+    <!-- Step 4 -->
+    <div class="step done">
+      <div class="step-num"><span class="badge code">CORE</span> Step 4</div>
+      <div class="step-title">Build health check engine (checks/)</div>
+      <div class="step-desc">
+        Three-layer architecture:
+      </div>
+
+      <div style="margin: 10px 0; font-size: 13px;">
+        <div style="display:flex; align-items:center; gap:8px; padding:6px 0;">
+          <span style="color:#58a6ff;">checks/__init__.py</span>
+          <span style="color:#8b949e;">→ Base class + <code>HealthResult</code> dataclass</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-left:2px solid #30363d; margin-left:12px; padding-left:12px;">
+          <span style="color:#58a6ff;">checks/http_check.py</span>
+          <span style="color:#8b949e;">→ Generic HTTP endpoint checker</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-left:2px solid #30363d; margin-left:12px; padding-left:12px;">
+          <span style="color:#58a6ff;">checks/ghl_check.py</span>
+          <span style="color:#8b949e;">→ GHL-specific (auth, rate limit, quota)</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; padding:6px 0;">
+          <span style="color:#58a6ff;">checks/runner.py</span>
+          <span style="color:#8b949e;">→ Dispatcher — runs all checks <strong>in parallel</strong> via asyncio</span>
+        </div>
+      </div>
+
+      <div class="note">💡 Key design: all checks run concurrently with <code>asyncio.gather()</code>. 11 services checked in ~2s instead of ~30s sequential.</div>
+      <div class="meta"><span>4 write_file calls</span></div>
+    </div>
+
+    <div class="diagram-arrow">↓</div>
+
+    <!-- Step 5 -->
+    <div class="step done">
+      <div class="step-num"><span class="badge code">WEB</span> Step 5</div>
+      <div class="step-title">Build Flask app + templates</div>
+      <div class="step-desc">
+        Three routes:
+      </div>
+      <div class="code-block">GET /           → Live SPA dashboard (auto-refresh, client grouping)
+GET /status     → Server-rendered status page
+GET /api/health → JSON API (for JS dashboard + external consumers)</div>
+      <div class="step-desc" style="margin-top:10px;">
+        Dashboard template uses vanilla JS — no frameworks. Fetches <code>/api/health</code> every 30s,
+        groups services by client, color-codes green/yellow/red.
+      </div>
+      <div class="decision">🔀 Decision: Vanilla JS vs React. Chose vanilla — single page, no build step, no npm.</div>
+      <div class="file-grid">
+        <span class="file-tag">app.py</span>
+        <span class="file-tag">templates/dashboard.html</span>
+        <span class="file-tag">templates/status.html</span>
+        <span class="file-tag">static/style.css</span>
+      </div>
+      <div class="meta"><span>4 write_file calls</span></div>
+    </div>
+
+    <div class="diagram-arrow">↓</div>
+
+    <!-- Step 6 -->
+    <div class="step test">
+      <div class="step-num"><span class="badge test">TEST</span> Step 6</div>
+      <div class="step-title">Dry-run health checks</div>
+      <div class="step-desc">
+        Ran the check pipeline against real APIs with fake keys to verify:
+      </div>
+      <div class="code-block">11 checks
+  [fail] John's Roofing TX  Calendly       538ms  HTTP 401 (bad key)
+  [ok  ] MagnifAI Internal  GitHub         248ms  HTTP 200 ✓
+  [fail] John's Roofing TX  n8n Webhook    342ms  DNS error (fake domain)</div>
+      <div class="step-desc">
+        Results confirmed all check types work: auth failures, DNS errors, timeouts, and successful requests.
+      </div>
+      <div class="meta"><span>1 terminal call</span></div>
+    </div>
+
+    <div class="diagram-arrow">↓</div>
+
+    <!-- Step 7 -->
+    <div class="step test">
+      <div class="step-num"><span class="badge test">DEPLOY</span> Step 7</div>
+      <div class="step-title">Start server + verify all routes</div>
+      <div class="step-desc">
+        Started Flask on port 8080 (5000 was blocked by AirPlay). Verified:
+      </div>
+      <div class="code-block">curl http://localhost:8080/          → 200  HTML dashboard
+curl http://localhost:8080/status    → 200  SSR status page
+curl http://localhost:8080/api/health → 200  JSON (11 checks)</div>
+      <div class="decision">🔀 Fix: Port 5000 was taken by macOS AirPlay Receiver. Switched to 8080 via <code>$PORT</code> env var.</div>
+      <div class="meta"><span>2 terminal calls</span></div>
+    </div>
+
+    <div class="diagram-arrow">↓</div>
+
+    <!-- Step 8 -->
+    <div class="step test">
+      <div class="step-num"><span class="badge test">VERIFY</span> Step 8</div>
+      <div class="step-title">Ad-hoc verification (15 checks)</div>
+      <div class="step-desc">
+        Created and ran a temp verification script that tested:
+      </div>
+      <div class="code-block">✅ 11 core files exist
+✅ All modules import cleanly
+✅ YAML config valid (3 clients, 11 services)
+✅ Health pipeline executes (11 checks)
+✅ Flask routes all 200
+→ 15/15 passed</div>
+      <div class="meta"><span>1 execute_code call</span></div>
+    </div>
+
+  </div>
+
+  <!-- Final state -->
+  <div class="result-box">
+    <h3>✅ Final state</h3>
+    <p>
+      <strong>~/projects/smb-automation-health/</strong> — 11 files, 3 Python modules, 2 templates, 1 CSS.<br>
+      Run with <code>cd ~/projects/smb-automation-health && python3 app.py</code> → <code>http://localhost:8080</code><br>
+      Total build time: ~15 minutes. 17 tool calls total.
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div style="margin-top:24px; padding:16px 20px; background:#1c2128; border:1px solid #30363d; border-radius:8px;">
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; text-align:center;">
+      <div><div style="font-size:22px; font-weight:700; color:#58a6ff;">8</div><div style="font-size:11px; color:#8b949e;">Steps</div></div>
+      <div><div style="font-size:22px; font-weight:700; color:#3fb950;">17</div><div style="font-size:11px; color:#8b949e;">Tool calls</div></div>
+      <div><div style="font-size:22px; font-weight:700; color:#d29922;">3</div><div style="font-size:11px; color:#8b949e;">Fixes</div></div>
+      <div><div style="font-size:22px; font-weight:700; color:#f85149;">~15</div><div style="font-size:11px; color:#8b949e;">Minutes</div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

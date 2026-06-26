@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Status — SMB Automation</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Service Status</h1>
+      <div class="controls">
+        <a href="/" class="btn">Live Dashboard</a>
+        <span class="last-check">{{ now().strftime("%H:%M:%S") if now else "" }}</span>
+      </div>
+    </div>
+    <div class="results">
+      {% for client_name, services in clients_data.items() %}
+        {% set fail_count = services | selectattr("status", "equalto", "fail") | list | length %}
+        {% set slow_count = services | selectattr("status", "equalto", "slow") | list | length %}
+        {% set ok_count = services | selectattr("status", "equalto", "ok") | list | length %}
+        {% set badge = "🔴" if fail_count > 0 else ("🟡" if slow_count > 0 else "🟢") %}
+
+        <div class="client-card">
+          <div class="client-header {{ 'has-fail' if fail_count > 0 }}">
+            <span class="client-badge">{{ badge }}</span>
+            <span class="client-name">{{ client_name }}</span>
+            <span class="client-counts">
+              <span class="ok">{{ ok_count }} ok</span>
+              {% if slow_count %}<span class="slow">{{ slow_count }} slow</span>{% endif %}
+              {% if fail_count %}<span class="fail">{{ fail_count }} fail</span>{% endif %}
+            </span>
+          </div>
+          <div class="services">
+            {% for s in services %}
+            <div class="service-row {{ s.status }}">
+              <span class="service-icon">{{ "✓" if s.status == "ok" else ("⚡" if s.status == "slow" else "✗") }}</span>
+              <span class="service-name">{{ s.service }}</span>
+              <span class="service-latency">{{ s.latency_ms }}ms</span>
+              <span class="service-detail" title="{{ s.error or s.detail }}">{{ s.detail }}</span>
+              {% if s.error %}<span class="service-error">{{ s.error }}</span>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

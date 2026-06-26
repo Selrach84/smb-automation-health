@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMB Automation Health</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    let autoRefresh = null;
+
+    async function checkAll() {
+      const btn = document.getElementById('refresh-btn');
+      btn.disabled = true;
+      btn.textContent = 'Checking...';
+
+      try {
+        const resp = await fetch('/api/health');
+        const results = await resp.json();
+        renderResults(results);
+      } catch (e) {
+        document.getElementById('results').innerHTML =
+          '<div class="error">Failed to fetch: ' + e.message + '</div>';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Refresh All';
+      document.getElementById('last-check').textContent =
+        new Date().toLocaleTimeString();
+    }
+
+    function renderResults(results) {
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+
+      // Group by client
+      const byClient = {};
+      for (const r of results) {
+        if (!byClient[r.client]) byClient[r.client] = [];
+        byClient[r.client].push(r);
+      }
+
+      for (const [client, services] of Object.entries(byClient)) {
+        const failCount = services.filter(s => s.status === 'fail').length;
+        const slowCount = services.filter(s => s.status === 'slow').length;
+        const okCount = services.filter(s => s.status === 'ok').length;
+
+        const card = document.createElement('div');
+        card.className = 'client-card';
+
+        const headerBadge = failCount > 0 ? '🔴' : slowCount > 0 ? '🟡' : '🟢';
+
+        card.innerHTML = `
+          <div class="client-header ${failCount > 0 ? 'has-fail' : ''}">
+            <span class="client-badge">${headerBadge}</span>
+            <span class="client-name">${client}</span>
+            <span class="client-counts">
+              <span class="ok">${okCount} ok</span>
+              ${slowCount > 0 ? `<span class="slow">${slowCount} slow</span>` : ''}
+              ${failCount > 0 ? `<span class="fail">${failCount} fail</span>` : ''}
+            </span>
+          </div>
+          <div class="services">
+            ${services.map(s => `
+              <div class="service-row ${s.status}">
+                <span class="service-icon">${s.status === 'ok' ? '✓' : s.status === 'slow' ? '⚡' : '✗'}</span>
+                <span class="service-name">${s.service}</span>
+                <span class="service-latency">${s.latency_ms}ms</span>
+                <span class="service-detail" title="${s.error || s.detail}">${s.detail}</span>
+                ${s.error ? `<span class="service-error">${s.error}</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function toggleAutoRefresh() {
+      const btn = document.getElementById('auto-btn');
+      if (autoRefresh) {
+        clearInterval(autoRefresh);
+        autoRefresh = null;
+        btn.textContent = 'Auto-refresh: OFF';
+        btn.className = 'btn-off';
+      } else {
+        checkAll();
+        autoRefresh = setInterval(checkAll, 30000);
+        btn.textContent = 'Auto-refresh: 30s';
+        btn.className = 'btn-on';
+      }
+    }
+
+    window.onload = () => checkAll();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SMB Automation Health</h1>
+      <div class="controls">
+        <button id="refresh-btn" onclick="checkAll()" class="btn">Refresh All</button>
+        <button id="auto-btn" onclick="toggleAutoRefresh()" class="btn-off">Auto-refresh: OFF</button>
+        <span id="last-check" class="last-check">—</span>
+      </div>
+    </div>
+    <div id="results" class="results">
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+# SMB Automation Health Monitor — Config
+
+clients:
+  - name: "John's Roofing TX"
+    slug: john-roofing
+    services:
+      - name: n8n Webhook
+        type: http
+        url: "https://n8n.john-roofing.com/webhook-test/health"
+        method: GET
+        timeout: 5
+        expected_status: 200
+      - name: GoHighLevel API
+        type: ghl
+        api_key: "${GHL_JOHN_API_KEY}"
+        sub_account: "john-roofing-tx"
+      - name: Stripe
+        type: http
+        url: "https://api.stripe.com/v1/balance"
+        method: GET
+        headers:
+          Authorization: "Bearer ${STRIPE_JOHN_SECRET_KEY}"
+        timeout: 10
+        expected_status: 200
+      - name: Calendly
+        type: http
+        url: "https://api.calendly.com/users/me"
+        method: GET
+        headers:
+          Authorization: "Bearer ${CALENDLY_JOHN_TOKEN}"
+        timeout: 10
+        expected_status: 200
+      - name: SendGrid Email
+        type: http
+        url: "https://api.sendgrid.com/v3/valid/email"
+        method: GET
+        headers:
+          Authorization: "Bearer ${SENDGRID_JOHN_KEY}"
+        timeout: 10
+        expected_status: 200
+
+  - name: "Phil's Recruitment"
+    slug: phil-recruitment
+    services:
+      - name: n8n Webhook
+        type: http
+        url: "https://n8n.phil-recruitment.com/webhook-test/health"
+        method: GET
+        timeout: 5
+        expected_status: 200
+      - name: GoHighLevel API
+        type: ghl
+        api_key: "${GHL_PHIL_API_KEY}"
+        sub_account: "phil-recruitment"
+      - name: Calendly
+        type: http
+        url: "https://api.calendly.com/users/me"
+        method: GET
+        headers:
+          Authorization: "Bearer ${CALENDLY_PHIL_TOKEN}"
+        timeout: 10
+        expected_status: 200
+
+  - name: "MagnifAI Internal"
+    slug: magnifai
+    services:
+      - name: GoHighLevel API
+        type: ghl
+        api_key: "${GHL_MAGNIFAI_API_KEY}"
+        sub_account: "magnifai"
+      - name: GitHub
+        type: http
+        url: "https://api.github.com"
+        method: GET
+        timeout: 5
+        expected_status: 200
+      - name: Stripe
+        type: http
+        url: "https://api.stripe.com/v1/balance"
+        method: GET
+        headers:
+          Authorization: "Bearer ${STRIPE_MAGNIFAI_SECRET_KEY}"
+        timeout: 10
+        expected_status: 200
